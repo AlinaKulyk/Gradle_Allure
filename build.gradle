@@ -1,0 +1,87 @@
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'io.qameta.allure:allure-gradle:2.8.1'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'maven'
+    id 'maven-publish'
+    id 'io.qameta.allure' version '2.8.1'
+}
+
+allure {
+    version = '2.10.0'
+    downloadLink = 'https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/2.10.0/allure-commandline-2.10.0.zip'
+    autoconfigure = true
+    allureJavaVersion = '2.13.7'
+    aspectjVersion = '1.9.2'
+    configuration = 'compile'
+}
+
+group 'org.demo'
+version '1.0-SNAPSHOT'
+
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+
+repositories {
+    jcenter()
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+//    allureCommandline(files("C:\\Users\\kulik\\allure-commandline-2.10.0.zip"))
+    implementation group: 'jakarta.xml.bind', name: 'jakarta.xml.bind-api', version: '3.0.0'
+    implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '3.0.0'
+    implementation group: 'io.github.bonigarcia', name: 'webdrivermanager', version: '4.3.1'
+    implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.141.59'
+    implementation group: 'io.cucumber', name: 'cucumber-junit', version: '6.10.4'
+    implementation group: 'io.cucumber', name: 'cucumber-java', version: '6.10.4'
+    implementation group: 'org.testng', name: 'testng', version: '6.14.3'
+    implementation ('org.uncommons:reportng:1.1.4') {
+        exclude group: 'org.testng', module: 'testng'
+    }
+    implementation group: 'io.qameta.allure', name: 'allure-testng', version: '2.14.0'
+    implementation 'org.aspectj:aspectjrt:1.9.2'
+    // implementation group: 'log4j', name: 'log4j', version: '1.2.17'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.14.1'
+    implementation group: 'com.google.inject', name: 'guice', version: '5.0.1'
+    implementation group: 'junit', name: 'junit', version: '4.12'
+}
+
+def testng = project.hasProperty('testng')
+/* test.doFirst {
+    jvmArgs "-javaagent:${configurations.agent.singleFile}"
+} */
+test {
+    systemProperty "file.encoding", "utf-8"
+    if(testng) {
+        exclude 'runner/**'
+        useTestNG() {
+            dependsOn cleanTest
+            useDefaultListeners = true
+            suites 'src/main/resources/TestNGFilesFolder/testng.xml'
+            options {
+                listeners << 'org.uncommons.reportng.HTMLReporter'
+                listeners << 'org.uncommons.reportng.JUnitXMLReporter'
+            }
+            testLogging {
+                events = ['PASSED', 'FAILED', 'SKIPPED']
+            }
+        }
+    } else {
+        exclude 'labTest/**'
+    }
+    ignoreFailures = true
+}
+
+gradle.startParameter.continueOnFailure = true
